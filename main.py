@@ -8,6 +8,7 @@ from awms.agents.execution import ExecutionAgent
 from awms.agents.explanation import ExplanationAgent
 from awms.agents.feedback import FeedbackAgent
 from awms.agents.main_agent import MainAgent
+from awms.agents.memory import MemoryAgent
 from awms.agents.tool_selection import ToolSelectionAgent
 from awms.bases import MessageBus
 from awms.logging import logger
@@ -22,6 +23,7 @@ def main():
 
     # Instantiate agents
     main_agent = MainAgent("Main", message_bus)
+    memory_agent = MemoryAgent("MemoryAgent", message_bus)
     tool_selection_agent = ToolSelectionAgent("ToolSelectionAgent", message_bus, task)
     feedback_agent = FeedbackAgent("FeedbackAgent", message_bus, task)
     explanation_agent = ExplanationAgent("ExplanationAgent", message_bus)

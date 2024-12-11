@@ -1,6 +1,6 @@
 import uuid
 from enum import Enum
-from typing import Dict
+from typing import Dict, List, Optional
 
 from awms.bases.agent import LLMAgent, MessageBus
 from awms.logging import logger
@@ -19,6 +19,9 @@ class MessageType(Enum):
     SELECT_TOOL = "select_tool"
     UPDATE_PERFORMANCE = "update_performance"
     FEEDBACK = "feedback"
+    STORE_MEMORY = "store_memory"
+    RETRIEVE_MEMORY = "retrieve_memory"
+    SEARCH_MEMORY = "search_memory"
 
 
 class ExecutionAgent(LLMAgent):
@@ -112,6 +115,12 @@ class ExecutionAgent(LLMAgent):
         state.subproblem_solutions = subproblem_solutions
         state.retry_count = 0
         self.state[problem_id] = state
+
+        # Store initial problem in memory
+        self.store_in_memory(state, "context", {
+            "initial_problem": problem,
+            "attempted_problems": list(attempted_problems)
+        })
 
         # Check for maximum depth
         if depth >= self.MAX_DEPTH:
@@ -335,6 +344,12 @@ class ExecutionAgent(LLMAgent):
             solution = tool.solve(state.problem, self, state.prior_results)
             state.solution = solution
 
+            # Store tool output in memory
+            self.store_in_memory(state, "tool_output", {
+                "tool": selected_tool,
+                "output": solution
+            })
+
             # Update tool success rate
             if selected_tool not in self.metrics["tool_success_rates"]:
                 self.metrics["tool_success_rates"][selected_tool] = {"successes": 0, "total": 0}
@@ -502,6 +517,12 @@ class ExecutionAgent(LLMAgent):
             # Root problem solved, ask for explanation
             self.request_explanation(state)
 
+        # Store final solution in memory
+        self.store_in_memory(state, "solution", {
+            "final_solution": state.final_solution,
+            "subproblem_solutions": [s.to_dict() for s in state.subproblem_solutions]
+        })
+
     def request_explanation(self, state: ProblemState):
         """
         Requests an explanation from the ExplanationAgent after the final solution is found.
@@ -536,3 +557,26 @@ class ExecutionAgent(LLMAgent):
         }
         self.send_message("Main", final_content, depth=state.depth, hierarchy=state.hierarchy)
         del self.state[state.problem_id]
+
+    def store_in_memory(self, state: ProblemState, memory_type: str, data: Dict):
+        """Store information in the MemoryAgent."""
+        content = {
+            "request": "store",
+            "problem_id": state.problem_id,
+            "problem": state.problem,
+            "problem_type": state.problem_type,
+            "parent_id": state.parent_id,
+            "hierarchy": state.hierarchy,
+            "memory_type": memory_type,
+            "data": data
+        }
+        self.send_message("MemoryAgent", content, depth=state.depth, hierarchy=state.hierarchy)
+
+    def retrieve_from_memory(self, state: ProblemState, memory_type: str):
+        """Retrieve information from the MemoryAgent."""
+        content = {
+            "request": "retrieve",
+            "problem_id": state.problem_id,
+            "memory_type": memory_type
+        }
+        self.send_message("MemoryAgent", content, depth=state.depth, hierarchy=state.hierarchy)
