@@ -58,11 +58,11 @@ class ExecutionAgent(LLMAgent):
         try:
             if "request" in content:
                 request = content["request"]
-                if request == "solve_problem":
+                if request == MessageType.SOLVE_PROBLEM.value:
                     self.handle_solve_problem(message)
                 else:
                     logger.warning(f"[ExecutionAgent] Unknown request type: {request}")
-            elif "selected_tool" in content:
+            elif MessageType.SELECTED_TOOL.value in content:
                 self.process_tool_selection(message)
             elif "feedback" in content:
                 self.handle_feedback(message)
@@ -329,7 +329,7 @@ class ExecutionAgent(LLMAgent):
         """
         content = message.content
         problem_id = content["problem_id"]
-        selected_tool = content["selected_tool"]
+        selected_tool = content[MessageType.SELECTED_TOOL.value]
         state = self.state.get(problem_id)
 
         if not state:
