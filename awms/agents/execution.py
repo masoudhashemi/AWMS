@@ -580,3 +580,12 @@ class ExecutionAgent(LLMAgent):
             "memory_type": memory_type
         }
         self.send_message("MemoryAgent", content, depth=state.depth, hierarchy=state.hierarchy)
+
+    def search_in_memory(self, state: ProblemState, query: str):
+        """Search for information in the MemoryAgent."""
+        content = {
+            "request": "search",
+            "problem_id": state.problem_id,
+            "query": query
+        }
+        self.send_message("MemoryAgent", content, depth=state.depth, hierarchy=state.hierarchy)
