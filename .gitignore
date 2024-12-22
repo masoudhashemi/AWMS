@@ -166,3 +166,7 @@ cython_debug/
 
 #vscode
 .vscode/
+
+*.env*
+*.pkl
+*.json*

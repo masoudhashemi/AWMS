@@ -89,7 +89,9 @@ class MathProblemTask(Task):
         else:
             return evaluation, True
 
-    def merge_solutions(self, subproblem_results: List[SubproblemResult], original_problem: str, agent: LLMAgent) -> str:
+    def merge_solutions(
+        self, subproblem_results: List[SubproblemResult], original_problem: str, agent: LLMAgent
+    ) -> str:
         # Prepare a summary of subproblem results
         summary = ""
         for result in subproblem_results:

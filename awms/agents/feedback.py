@@ -40,4 +40,6 @@ class FeedbackAgent(LLMAgent):
                 "problem_id": content["problem_id"],
             }
             self.send_message(sender_id, feedback_content, depth=message.depth, hierarchy=message.hierarchy)
-            logger.info(f"[FeedbackAgent] Sent feedback to '{sender_id}': {feedback}, Success: {success}, Retry: {retry}")
+            logger.info(
+                f"[FeedbackAgent] Sent feedback to '{sender_id}': {feedback}, Success: {success}, Retry: {retry}"
+            )

@@ -56,7 +56,9 @@ def solve_problem(idx: int, problem: str):
     return idx, final_solution, explanation
 
 
-def save_intermediate_results(solutions, explanations, solutions_output_path, explanations_output_path, messages_log_path):
+def save_intermediate_results(
+    solutions, explanations, solutions_output_path, explanations_output_path, messages_log_path
+):
     """Save intermediate results to disk."""
     with open(solutions_output_path, "wb") as f:
         pickle.dump(solutions, f)

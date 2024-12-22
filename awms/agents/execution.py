@@ -47,7 +47,12 @@ class ExecutionAgent(LLMAgent):
         self.state: Dict[str, ProblemState] = {}
         self.MAX_DEPTH = max_depth
         self.MAX_TRIES = max_tries
-        self.metrics = {"problems_solved": 0, "problems_failed": 0, "average_solution_time": 0, "tool_success_rates": {}}
+        self.metrics = {
+            "problems_solved": 0,
+            "problems_failed": 0,
+            "average_solution_time": 0,
+            "tool_success_rates": {},
+        }
 
     def process_message(self, message: Message):
         """Processes incoming messages and routes them to appropriate handlers."""
@@ -117,10 +122,9 @@ class ExecutionAgent(LLMAgent):
         self.state[problem_id] = state
 
         # Store initial problem in memory
-        self.store_in_memory(state, "context", {
-            "initial_problem": problem,
-            "attempted_problems": list(attempted_problems)
-        })
+        self.store_in_memory(
+            state, "context", {"initial_problem": problem, "attempted_problems": list(attempted_problems)}
+        )
 
         # Check for maximum depth
         if depth >= self.MAX_DEPTH:
@@ -345,10 +349,7 @@ class ExecutionAgent(LLMAgent):
             state.solution = solution
 
             # Store tool output in memory
-            self.store_in_memory(state, "tool_output", {
-                "tool": selected_tool,
-                "output": solution
-            })
+            self.store_in_memory(state, "tool_output", {"tool": selected_tool, "output": solution})
 
             # Update tool success rate
             if selected_tool not in self.metrics["tool_success_rates"]:
@@ -518,10 +519,14 @@ class ExecutionAgent(LLMAgent):
             self.request_explanation(state)
 
         # Store final solution in memory
-        self.store_in_memory(state, "solution", {
-            "final_solution": state.final_solution,
-            "subproblem_solutions": [s.to_dict() for s in state.subproblem_solutions]
-        })
+        self.store_in_memory(
+            state,
+            "solution",
+            {
+                "final_solution": state.final_solution,
+                "subproblem_solutions": [s.to_dict() for s in state.subproblem_solutions],
+            },
+        )
 
     def request_explanation(self, state: ProblemState):
         """
@@ -568,24 +573,16 @@ class ExecutionAgent(LLMAgent):
             "parent_id": state.parent_id,
             "hierarchy": state.hierarchy,
             "memory_type": memory_type,
-            "data": data
+            "data": data,
         }
         self.send_message("MemoryAgent", content, depth=state.depth, hierarchy=state.hierarchy)
 
     def retrieve_from_memory(self, state: ProblemState, memory_type: str):
         """Retrieve information from the MemoryAgent."""
-        content = {
-            "request": "retrieve",
-            "problem_id": state.problem_id,
-            "memory_type": memory_type
-        }
+        content = {"request": "retrieve", "problem_id": state.problem_id, "memory_type": memory_type}
         self.send_message("MemoryAgent", content, depth=state.depth, hierarchy=state.hierarchy)
 
     def search_in_memory(self, state: ProblemState, query: str):
         """Search for information in the MemoryAgent."""
-        content = {
-            "request": "search",
-            "problem_id": state.problem_id,
-            "query": query
-        }
+        content = {"request": "search", "problem_id": state.problem_id, "query": query}
         self.send_message("MemoryAgent", content, depth=state.depth, hierarchy=state.hierarchy)

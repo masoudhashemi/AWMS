@@ -1,42 +1,15 @@
 import json
 import logging
-import os
 import time as time_module
 from abc import ABC, abstractmethod
 from collections import deque
 from typing import Any, Dict, List, Optional
 
-from dotenv import load_dotenv
-from openai import AzureOpenAI, OpenAI
+from litellm import completion
 
+from awms.config import LLM_CONFIG, MAX_TOKENS, TEMPERATURE
 from awms.logging import logger
 from awms.utils import Message, ProblemState, SubproblemResult
-
-# Load environment variables for LLM
-load_dotenv()
-job_id = os.getenv("JOB_ID")
-
-if job_id:
-    api_key = os.getenv("API_KEY")
-    model_name = os.getenv("MODEL_NAME")
-    model_type = "vllm"
-    base_url = "https://" + job_id + "-8000.job.console.elementai.com/v1"
-    llm_client = OpenAI(
-        base_url=base_url,
-        api_key=api_key,
-    )
-else:
-    model_type = "gpt"
-    endpoint = os.getenv("ENDPOINT_URL")
-    deployment = os.getenv("DEPLOYMENT_NAME")
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    api_version = os.getenv("API_VERSION")
-    model_name = os.getenv("MODEL_NAME")
-    llm_client = AzureOpenAI(
-        azure_endpoint=endpoint,
-        api_key=api_key,
-        api_version=api_version,
-    )
 
 
 class MessageBus:
@@ -227,7 +200,6 @@ class LLMAgent(Agent):
         super().__init__(agent_id, message_bus)
         self.prior_results = []
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.llm = llm_client
 
     @abstractmethod
     def process_message(self, message: Message):
@@ -235,24 +207,13 @@ class LLMAgent(Agent):
 
     def llm_call(self, prompt: str):
         try:
-            if model_type == "vllm":
-                prediction = self.llm.completions.create(
-                    model=model_name,
-                    prompt=f"<|user|>\n{prompt}<|end|>\n<|assistant|>\n",
-                    max_tokens=1500,
-                    temperature=0.1,
-                )
-                response = [p.model_dump()["text"].strip() for p in prediction.choices]
-                llm_output = response[0]
-            elif model_type == "gpt":
-                prediction = self.llm.chat.completions.create(
-                    model=model_name,
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=1500,
-                    temperature=0.1,
-                )
-                llm_output = prediction.choices[0].message.content
-            return llm_output
+            response = completion(
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=MAX_TOKENS,
+                temperature=TEMPERATURE,
+                **LLM_CONFIG,
+            )
+            return response.choices[0].message.content
         except Exception as e:
             logger.error(f"Error in LLM API call: {e}")
             return "An error occurred while calling the LLM API."
