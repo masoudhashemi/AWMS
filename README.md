@@ -13,6 +13,8 @@ This repository presents a **recursive message-passing framework** that coordina
     - **Feedback Agent** - Validates the solution of each sub-problem, providing feedback and suggesting adjustments or alternative tools if necessary.
     - **Explanation Agent** - Compiles detailed explanations for each step or the final solution, ensuring interpretability and clarity for the user.
 
+The `execution` agent is the main agent that orchestrates the execution of agent calls.
+
 ## Key Features
 
 - **Recursive Solution Generation**: Each complex math problem is decomposed into sub-problems. The message-passing agents are then recursively applied to each sub-problem, allowing for precise, step-by-step solutions.
@@ -33,7 +35,6 @@ Consider the problem \( x^3 - 6x^2 + 11x - 6 = 0 \):
     - **Feedback Agent** verifies the correctness of roots and may suggest further steps if explanations or refinements are needed.
     - **Explanation Agent** provides a clear, recursive breakdown of each factorization step.
 
-The `execution` agent is the main agent that orchestrates the execution of agent calls.
 3. **Feedback-Driven Iteration**: The Feedback Agent may direct the Tool Selection Agent to switch tools or adjust parameters if initial solutions are incomplete or unclear, recursively refining until each sub-problem converges on an optimal solution.
 
 ## Contextual Multi-Armed Bandit Tool Selection
