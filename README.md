@@ -1,4 +1,4 @@
-# Message Passing Framework for Recursive Solution of Word-Based Math Problems
+# Message Passing Framework for Recursive Solution of Word-Math Problems
 
 This repository presents a **recursive message-passing framework** that coordinates specialized agents to solve complex word-based math problems by breaking them down into smaller sub-problems. The framework recursively applies agents on each sub-problem, enabling efficient and accurate solutions through adaptive tool selection.
 
