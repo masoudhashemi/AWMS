@@ -33,9 +33,10 @@ Consider the problem \( x^3 - 6x^2 + 11x - 6 = 0 \):
     - **Feedback Agent** verifies the correctness of roots and may suggest further steps if explanations or refinements are needed.
     - **Explanation Agent** provides a clear, recursive breakdown of each factorization step.
 
+The `execution` agent is the main agent that orchestrates the execution of agent calls.
 3. **Feedback-Driven Iteration**: The Feedback Agent may direct the Tool Selection Agent to switch tools or adjust parameters if initial solutions are incomplete or unclear, recursively refining until each sub-problem converges on an optimal solution.
 
-## Contextual Multi-Armed Bandit (C-MAB)
+## Contextual Multi-Armed Bandit Tool Selection
 
 It has been observed that different tools have different performance characteristics. Some tools are better at solving certain types of problems, while others are better at solving other types of problems. The contextual multi-armed bandit (C-MAB) algorithm is used to select the most suitable tool for each sub-problem. This adaptive selection enhances problem-solving efficiency by learning from feedback.
 
