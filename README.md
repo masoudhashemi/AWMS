@@ -17,7 +17,7 @@ This repository presents a **recursive message-passing framework** that coordina
 
 - **Recursive Solution Generation**: Each complex math problem is decomposed into sub-problems. The message-passing agents are then recursively applied to each sub-problem, allowing for precise, step-by-step solutions.
   
-- **Adaptive Tool Selection**: Uses an exploration-exploitation strategy (randomization or bandit algorithms) to select the most suitable tool for each sub-problem. This adaptive selection enhances problem-solving efficiency by learning from feedback.
+- **Adaptive Tool Selection**: Uses an exploration-exploitation strategy (contextual multi-armed bandit algorithms with Thompson Sampling) to select the most suitable tool for each sub-problem. This adaptive selection enhances problem-solving efficiency by learning from feedback.
   
 - **Flexible, Modular Architecture**: The framework's agents communicate through a message-passing protocol, allowing dynamic iteration and retooling based on feedback. Each agent’s responsibilities are modular, making it easy to expand the framework with additional tools or more complex recursive logic.
 
@@ -35,62 +35,8 @@ Consider the problem \( x^3 - 6x^2 + 11x - 6 = 0 \):
 
 3. **Feedback-Driven Iteration**: The Feedback Agent may direct the Tool Selection Agent to switch tools or adjust parameters if initial solutions are incomplete or unclear, recursively refining until each sub-problem converges on an optimal solution.
 
-## Future Work
+## Contextual Multi-Armed Bandit (C-MAB)
 
-- **Dynamic Parameter Tuning**: Implement strategies to adjust exploration parameters in real-time based on system performance.
-- **Enhanced Bandit Algorithms**: Test advanced bandit algorithms like Thompson Sampling for more strategic tool selection.
-- **Multi-Objective Optimization**: Integrate additional performance metrics, such as computation time or accuracy, into the selection strategy.
-- **Reinforcement Learning Integration**: Explore reinforcement learning to refine the recursive decision-making process.
-- **Training Phase**: Incorporate a training round to optimize tool performance on specific problem types before recursive application. 
+It has been observed that different tools have different performance characteristics. Some tools are better at solving certain types of problems, while others are better at solving other types of problems. The contextual multi-armed bandit (C-MAB) algorithm is used to select the most suitable tool for each sub-problem. This adaptive selection enhances problem-solving efficiency by learning from feedback.
 
-This recursive, feedback-driven approach makes the framework robust, scalable, and highly adaptable to a wide range of word-based math problems, providing both efficient computation and detailed explanations for each solution.
-
-### Project Structure Overview
-
-``` plaintext
-awms/
-├── agents/
-├── bases/
-├── notebooks/
-├── problem_solver.py
-├── tasks/
-├── tools/
-└── utils.py
-```
-
-### Folder Descriptions
-
-1. **agents/**
-   - Contains the different types of agents involved in solving problems and managing tasks. Each agent has a specific role, such as executing a solution, generating explanations, providing feedback, or selecting the most appropriate tool for the task.
-   - **Files**:
-     - `execution.py`: Handles task execution and manages the primary logic for problem-solving.
-     - `explanation.py`: Provides explanations or detailed reasoning steps for each solution.
-     - `feedback.py`: Collects feedback on solutions, which could be used for improving future problem-solving attempts.
-     - `tool_selection.py`: Chooses the best tool or approach for each task based on the problem type.
-
-2. **bases/**
-   - Defines base classes and shared structures for the main components like agents, tasks, and tools. These base classes provide common functionalities and structures, ensuring consistency across different agents and tools.
-   - **Files**:
-     - `agent.py`: Base class for defining agent-specific behavior and attributes.
-     - `task.py`: Base class for defining tasks, which are units of work an agent can execute.
-     - `tool.py`: Base class for defining tools, with reusable logic for any tool used in problem-solving.
-
-3. **notebooks/**
-   - A folder for Jupyter notebooks, which can be used for experimentation, testing, or demonstrating the problem-solving process in an interactive environment.
-
-4. **problem_solver.py**
-   - This script is the main problem-solving logic, coordinating the agents, tasks, and tools to solve problems. It acts as a central hub, orchestrating the flow of tasks between different components.
-
-5. **tasks/**
-   - Contains specific task definitions that the problem solver will handle. Each task defines a particular problem type or domain that the agents are set to solve.
-   - **Files**:
-     - `math.py`: Defines mathematical tasks, likely including problem structures, rules, and requirements specific to solving math-related problems.
-
-6. **tools/**
-   - Houses specific tools or methods that agents can employ to solve tasks. Tools might include predefined solution strategies, reasoning methods, or problem-solving algorithms.
-   - **Files**:
-     - `cot.py`: Implements the Chain of Thought (CoT) method, a step-by-step reasoning approach for complex problems.
-     - `pal.py`: Implements the PAL (Program-Aided Language) method, which aids in problem-solving through programming techniques or symbolic logic.
-
-7. **utils.py**
-   - Contains helper functions or utilities used throughout the project. These might include functions for logging, data manipulation, saving/loading files, or handling exceptions.
+The task class classfies the subproblems into different categories, and the C-MAB algorithm is used to select the most suitable tool for each sub-problem. The improves over tiem while solving the subproblems based on the feedbacks provided from the feedback agent.
