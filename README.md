@@ -49,3 +49,7 @@ Consider the problem \( x^3 - 6x^2 + 11x - 6 = 0 \):
 
 1. create a `.env` to set the environment variables for LLM API key and endpoint
 2. update `awms/config.py` to set the model name and endpoint
+
+![image](./static/solution_example.png)
+
+A problem that is broken down into 4 sub-problems. One of the sub-problems is further broken down into 4 sub-problems. The final solution is the combination of the solutions of the sub-problems.
