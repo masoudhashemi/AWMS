@@ -1,5 +1,5 @@
 # Change this to your own API key
-# Here we are using Azure OpenAI
+# Here we are using Azure and OpenAI. You can easily add more following liteLLM's documentation.
 
 import os
 
