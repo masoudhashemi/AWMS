@@ -1,43 +1,62 @@
-# Change this to your own API key
-# Here we are using Azure and OpenAI. You can easily add more following liteLLM's documentation.
-
 import os
+from dataclasses import dataclass
+from typing import Dict, Optional
 
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+if not load_dotenv():
+    raise EnvironmentError("Failed to load .env file")
 
-API_SOURCE = os.getenv("API_SOURCE", "openai")
 
-# LLM Configuration
+@dataclass
+class LLMConfig:
+    model: str
+    api_key: str
+    endpoint: Optional[str] = None
+    api_version: Optional[str] = None
+    deployment_name: Optional[str] = None
 
-if API_SOURCE == "openai":
-    OPENAPI_API_KEY = os.getenv("OPENAPI_API_KEY")
-    MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4")
-    LLM_CONFIG = {
-        "model": f"openai/{MODEL_NAME}",
-        "api_key": OPENAPI_API_KEY,
-    }
 
-elif API_SOURCE == "azure":
-    OPENAPI_API_KEY = os.getenv("AZURE_OPENAPI_API_KEY")
-    AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT_URL")
-    AZURE_API_VERSION = os.getenv("AZURE_API_VERSION")
-    MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
-    DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME")
+# Constants
+DEFAULT_OPENAI_MODEL = "gpt-4"
+DEFAULT_AZURE_MODEL = "gpt-4"
 
-    MODEL_TYPE = "azure"
-    os.environ["AZURE_API_KEY"] = OPENAPI_API_KEY
-    os.environ["AZURE_API_BASE"] = AZURE_ENDPOINT
-    os.environ["AZURE_API_VERSION"] = AZURE_API_VERSION
 
-    LLM_CONFIG = {
-        "model": f"azure/{MODEL_NAME}",
-        "api_key": OPENAPI_API_KEY,
-        "api_base": AZURE_ENDPOINT,
-        "api_version": AZURE_API_VERSION,
-    }
+def get_llm_config() -> Dict:
+    api_source = os.getenv("API_SOURCE", "openai").lower()
+
+    if api_source == "openai":
+        api_key = os.getenv("OPENAPI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAPI_API_KEY not found in environment variables")
+
+        return LLMConfig(model=f"openai/{os.getenv('MODEL_NAME', DEFAULT_OPENAI_MODEL)}", api_key=api_key).__dict__
+
+    elif api_source == "azure":
+        api_key = os.getenv("AZURE_OPENAPI_API_KEY")
+        endpoint = os.getenv("AZURE_ENDPOINT_URL")
+        api_version = os.getenv("AZURE_API_VERSION")
+
+        if not all([api_key, endpoint, api_version]):
+            raise ValueError("Missing required Azure configuration")
+
+        os.environ.update({"AZURE_API_KEY": api_key, "AZURE_API_BASE": endpoint, "AZURE_API_VERSION": api_version})
+
+        return LLMConfig(
+            model=f"azure/{os.getenv('MODEL_NAME', DEFAULT_AZURE_MODEL)}",
+            api_key=api_key,
+            endpoint=endpoint,
+            api_version=api_version,
+            deployment_name=os.getenv("DEPLOYMENT_NAME"),
+        ).__dict__
+
+    raise ValueError(f"Unsupported API_SOURCE: {api_source}")
+
+
+LLM_CONFIG = get_llm_config()
+# remove None values
+LLM_CONFIG = {k: v for k, v in LLM_CONFIG.items() if v is not None}
 
 # LiteLLM specific settings
 MAX_TOKENS = 1500
