@@ -39,16 +39,30 @@ class MathProblemTask(Task):
         )
         response = llm_agent.llm_call(prompt)
         logger.info(f"[MathProblemTask] Subproblems: {response}")
-        if "```json" in response:
-            pattern = r"```json\n(.*)\n```"
-            match = re.search(pattern, response)
-            if match:
-                response = match.group(1)
-        # If the response is not a valid JSON, treat it as a single subproblem
+        
         try:
-            subproblems = json.loads(response)
+            # First try direct JSON parsing
+            if isinstance(response, str):
+                if "```json" in response:
+                    # Extract JSON from markdown
+                    pattern = r"```json\n(.*?)```"
+                    match = re.search(pattern, response, re.DOTALL)
+                    if match:
+                        json_str = match.group(1).strip()
+                        subproblems = json.loads(json_str)
+                    else:
+                        subproblems = [response]
+                else:
+                    # Try parsing response directly as JSON
+                    subproblems = json.loads(response)
+            else:
+                # Response is already parsed
+                subproblems = response if isinstance(response, list) else [str(response)]
+                
         except json.JSONDecodeError:
+            logger.warning(f"Failed to parse JSON response: {response}")
             subproblems = [response]
+        
         subproblems = self.filter_subproblems(problem, subproblems, llm_agent)
         logger.info(f"[MathProblemTask] Subproblems parsed: {subproblems}")
         return subproblems

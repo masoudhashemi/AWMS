@@ -36,20 +36,20 @@ def main():
 
     # Load your problems (assuming you have them in a list)
     problems_math = [
-        (
-            "John drives for 3 hours at a speed of 60 mph and then turns around because he realizes he forgot something very important at home.  "
-            "He tries to get home in 4 hours but spends the first 2 hours in standstill traffic.  "
-            "He spends the next half-hour driving at a speed of 30mph, before being able to drive the remaining time of the 4 hours going at 80 mph.  How far is he from home at the end of those 4 hours?"
-        ),
+        # (
+        #     "John drives for 3 hours at a speed of 60 mph and then turns around because he realizes he forgot something very important at home.  "
+        #     "He tries to get home in 4 hours but spends the first 2 hours in standstill traffic.  "
+        #     "He spends the next half-hour driving at a speed of 30mph, before being able to drive the remaining time of the 4 hours going at 80 mph.  How far is he from home at the end of those 4 hours?"
+        # ),
         # (
         #     "A car travels 120 miles at a certain speed.  If the car had gone 20 mph faster, the trip would have taken 1 hour less.  "
         #     "What was the speed of the car?"
         # ),
         # a problem needing its subproblems to be broken down further
-        # (
-        #     "A car travels 120 miles at a certain speed.  If the car had gone 20 mph faster, the trip would have taken 1 hour less.  "
-        #     "How long does it take to travel 120 miles with the original speed?"
-        # ),
+        (
+            "A car travels 120 miles at a certain speed.  If the car had gone 20 mph faster, the trip would have taken 1 hour less.  "
+            "How long does it take to travel 120 miles with the original speed?"
+        ),
     ]
 
     # problems_math = pd.read_json("./data/problems/gsm8k/test.jsonl", orient="records", lines=True)["question"].tolist()
