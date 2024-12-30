@@ -363,9 +363,6 @@ class ExecutionAgent(LLMAgent):
                     state, "cot_reasoning", {"tool": selected_tool, "cot_reasoning": tool_output["cot_reasoning"]}
                 )
 
-            # Store tool output in memory
-            self.store_in_memory(state, "tool_output", {"tool": selected_tool, "output": state.solution})
-
             # Update tool success rate
             if selected_tool not in self.metrics["tool_success_rates"]:
                 self.metrics["tool_success_rates"][selected_tool] = {"successes": 0, "total": 0}

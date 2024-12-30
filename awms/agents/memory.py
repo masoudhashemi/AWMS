@@ -2,6 +2,9 @@ import json
 import os
 from typing import Dict, List, Optional, Union
 
+import numpy as np
+from sentence_transformers import SentenceTransformer
+
 from awms.bases.agent import LLMAgent
 from awms.logging import logger
 from awms.utils import Message
@@ -23,6 +26,7 @@ class MemoryAgent(LLMAgent):
         self.memory: Dict[str, Dict] = {}
         self.memory_file = memory_file
         self.load_memory()
+        self.model = SentenceTransformer("all-MiniLM-L6-v2")
 
     def save_memory(self):
         """Save memory to JSON file in a readable format."""
@@ -126,20 +130,29 @@ class MemoryAgent(LLMAgent):
             logger.error("[MemoryAgent] Missing query in search request")
             return
 
+        query_embedding = self.model.encode(query)
         results = []
+
         for prob_id, data in self.memory.items():
-            # Only consider problems that were successfully solved
             if data.get("solutions") and data.get("problem_type") == problem_type:
-                # Get latest solution
                 latest_solution = data["solutions"][-1]
-                # Get associated tool outputs
                 tool_outputs = data.get("tool_outputs", [])
+                problem_embedding = self.model.encode(data["problem"])
+                similarity = np.dot(query_embedding, problem_embedding) / (
+                    np.linalg.norm(query_embedding) * np.linalg.norm(problem_embedding)
+                )
+                results.append(
+                    {
+                        "problem": data["problem"],
+                        "solution": latest_solution,
+                        "tool_outputs": tool_outputs,
+                        "similarity": similarity,
+                    }
+                )
 
-                results.append({"problem": data["problem"], "solution": latest_solution, "tool_outputs": tool_outputs})
-
-        # Return top N most similar examples
-        # TODO: Add actual semantic similarity scoring here
-        return results[:n_results]
+        results = sorted(results, key=lambda x: x["similarity"], reverse=True)[:n_results]
+        response = {"problem_id": content["problem_id"], "data": results}
+        self.send_message(message.sender_id, response, depth=message.depth, hierarchy=message.hierarchy)
 
     def _retrieve(self, problem_id: str, memory_type: str) -> Optional[Union[Dict, List]]:
         """Internal method to retrieve information from memory."""
