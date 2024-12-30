@@ -1,3 +1,5 @@
+import json
+import os
 from typing import Dict, List, Optional, Union
 
 from awms.bases.agent import LLMAgent
@@ -16,9 +18,34 @@ class MemoryAgent(LLMAgent):
     - Relationships between problems
     """
 
-    def __init__(self, agent_id: str, message_bus: "MessageBus"):
+    def __init__(self, agent_id: str, message_bus: "MessageBus", memory_file: str = "agent_memory.json"):
         super().__init__(agent_id, message_bus)
         self.memory: Dict[str, Dict] = {}
+        self.memory_file = memory_file
+        self.load_memory()
+
+    def save_memory(self):
+        """Save memory to JSON file in a readable format."""
+        try:
+            with open(self.memory_file, "w", encoding="utf-8") as f:
+                json.dump(self.memory, f, indent=2, ensure_ascii=False)
+            logger.info(f"[MemoryAgent] Memory saved to {self.memory_file}")
+        except Exception as e:
+            logger.error(f"[MemoryAgent] Failed to save memory: {e}")
+
+    def load_memory(self):
+        """Load memory from JSON file if it exists."""
+        if os.path.exists(self.memory_file):
+            try:
+                with open(self.memory_file, "r", encoding="utf-8") as f:
+                    self.memory = json.load(f)
+                logger.info(f"[MemoryAgent] Memory loaded from {self.memory_file}")
+            except Exception as e:
+                logger.error(f"[MemoryAgent] Failed to load memory: {e}")
+                self.memory = {}
+        else:
+            logger.info(f"[MemoryAgent] No memory file found at {self.memory_file}")
+            self.memory = {}
 
     def process_message(self, message: Message):
         """Process incoming memory-related requests."""
@@ -38,7 +65,7 @@ class MemoryAgent(LLMAgent):
             logger.warning(f"[MemoryAgent] Unknown request type: {request}")
 
     def handle_store(self, content: Dict):
-        """Store information in memory."""
+        """Store information in memory and save to file."""
         problem_id = content.get("problem_id")
         if not problem_id:
             logger.error("[MemoryAgent] Attempted to store without problem_id")
@@ -70,6 +97,9 @@ class MemoryAgent(LLMAgent):
 
         logger.info(f"[MemoryAgent] Stored {memory_type} for problem {problem_id}")
 
+        # Save memory after each store operation
+        self.save_memory()
+
     def handle_retrieve(self, message: Message):
         """Retrieve specific information from memory."""
         content = message.content
@@ -86,19 +116,30 @@ class MemoryAgent(LLMAgent):
         self.send_message(message.sender_id, response, depth=message.depth, hierarchy=message.hierarchy)
 
     def handle_search(self, message: Message):
-        """Search memory for relevant information using LLM."""
+        """Search for similar solved problems in memory."""
         content = message.content
         query = content.get("query")
-        context = content.get("context", {})
+        problem_type = content.get("problem_type")
+        n_results = content.get("n_results", 2)
 
         if not query:
             logger.error("[MemoryAgent] Missing query in search request")
             return
 
-        results = self._search_memory(query, context)
+        results = []
+        for prob_id, data in self.memory.items():
+            # Only consider problems that were successfully solved
+            if data.get("solutions") and data.get("problem_type") == problem_type:
+                # Get latest solution
+                latest_solution = data["solutions"][-1]
+                # Get associated tool outputs
+                tool_outputs = data.get("tool_outputs", [])
 
-        response = {"query": query, "results": results}
-        self.send_message(message.sender_id, response, depth=message.depth, hierarchy=message.hierarchy)
+                results.append({"problem": data["problem"], "solution": latest_solution, "tool_outputs": tool_outputs})
+
+        # Return top N most similar examples
+        # TODO: Add actual semantic similarity scoring here
+        return results[:n_results]
 
     def _retrieve(self, problem_id: str, memory_type: str) -> Optional[Union[Dict, List]]:
         """Internal method to retrieve information from memory."""

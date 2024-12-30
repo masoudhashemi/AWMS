@@ -310,30 +310,30 @@ class ExecutionAgent(LLMAgent):
             self.select_tool_and_solve(subproblem_state)
 
     def select_tool_and_solve(self, state: ProblemState):
-        """
-        Sends a request to the ToolSelectionAgent to choose a tool. Once a tool is selected,
-        the solution attempt will proceed in process_tool_selection.
-        """
+        """Select tool and get similar examples before solving."""
         problem_type = self.task.classify_problem(state.problem, self)
         state.problem_type = problem_type
-        logger.info(f"[ExecutionAgent] Problem classified as: {problem_type}")
 
+        # Get similar examples from memory
+        content = {"request": "search", "query": state.problem, "problem_type": problem_type, "n_results": 2}
+        similar_examples = self.search_in_memory(state, content)
+
+        # Proceed with tool selection
         content = {
             "request": "select_tool",
             "problem_type": problem_type,
             "attempted_tools": state.attempted_tools,
             "problem_id": state.problem_id,
+            "similar_examples": similar_examples,  # Pass examples to tool selection
         }
         self.send_message("ToolSelectionAgent", content, depth=state.depth, hierarchy=state.hierarchy)
 
     def process_tool_selection(self, message: Message):
-        """
-        After a tool is selected by the ToolSelectionAgent, use it to solve the problem.
-        If the tool fails, send feedback to handle retries or switching tools.
-        """
+        """After tool selection, solve with examples."""
         content = message.content
         problem_id = content["problem_id"]
         selected_tool = content[MessageType.SELECTED_TOOL.value]
+        similar_examples = content.get("similar_examples", [])
         state = self.state.get(problem_id)
 
         if not state:
@@ -345,9 +345,9 @@ class ExecutionAgent(LLMAgent):
 
         try:
             tool = get_tool(selected_tool)
-            tool_output = tool.solve(state.problem, self, state.prior_results)
+            # Pass similar examples to the tool
+            tool_output = tool.solve(state.problem, self, state.prior_results, similar_examples=similar_examples)
             state.solution = tool_output["execution_result"]
-
             # Log tool output and reasoning/code
             logger.info(
                 f"[ExecutionAgent] Tool '{selected_tool}' output for problem_id '{problem_id}': {state.solution}"
@@ -424,7 +424,7 @@ class ExecutionAgent(LLMAgent):
                 "tool": state.selected_tool,
                 "success": success,
                 "retry": retry,
-                "problem_id": problem_id,  # Add problem_id to track context
+                "problem_id": problem_id,
             }
             self.send_message("ToolSelectionAgent", update_content, depth=state.depth, hierarchy=state.hierarchy)
 

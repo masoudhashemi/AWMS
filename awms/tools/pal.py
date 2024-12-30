@@ -15,7 +15,14 @@ class PALTool(Tool):
             else:
                 prior_text += f"Question: {item.question}\nAnswer: [Failed to Solve]\nFeedback: {item.answer}\n\n"
 
+        examples_text = ""
+        if similar_examples:
+            examples_text = "\nSimilar examples:\n"
+            for example in similar_examples:
+                examples_text += f"Example Question: {example['question']}\nPython Solution:\n{example['answer']}\n\n"
+
         prompt = (
+            f"{examples_text}"
             "Using the information from previous steps (if there are any),"
             f"{prior_text}"
             f"Write Python code to solve the following problem."

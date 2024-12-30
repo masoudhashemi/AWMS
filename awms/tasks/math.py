@@ -39,7 +39,7 @@ class MathProblemTask(Task):
         )
         response = llm_agent.llm_call(prompt)
         logger.info(f"[MathProblemTask] Subproblems: {response}")
-        
+
         try:
             # First try direct JSON parsing
             if isinstance(response, str):
@@ -58,11 +58,11 @@ class MathProblemTask(Task):
             else:
                 # Response is already parsed
                 subproblems = response if isinstance(response, list) else [str(response)]
-                
+
         except json.JSONDecodeError:
             logger.warning(f"Failed to parse JSON response: {response}")
             subproblems = [response]
-        
+
         subproblems = self.filter_subproblems(problem, subproblems, llm_agent)
         logger.info(f"[MathProblemTask] Subproblems parsed: {subproblems}")
         return subproblems

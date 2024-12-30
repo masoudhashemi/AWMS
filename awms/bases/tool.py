@@ -9,15 +9,23 @@ class Tool(ABC):
     """Abstract base class for tools."""
 
     @abstractmethod
-    def generate_prompt(self, problem: str, prior_results: List[Dict[str, str]]) -> str:
+    def generate_prompt(
+        self, problem: str, prior_results: List[Dict[str, str]], similar_examples: List[Dict[str, str]] = None
+    ) -> str:
         pass
 
     @abstractmethod
     def process_llm_output(self, llm_output: str) -> str:
         pass
 
-    def solve(self, problem: str, llm_agent: LLMAgent, prior_results: List[Dict[str, str]]):
-        prompt = self.generate_prompt(problem, prior_results)
+    def solve(
+        self,
+        problem: str,
+        llm_agent: LLMAgent,
+        prior_results: List[Dict[str, str]],
+        similar_examples: List[Dict[str, str]] = None,
+    ):
+        prompt = self.generate_prompt(problem, prior_results, similar_examples)
         logger.info(f"[Tool] Prompt: {prompt}")
         llm_output = llm_agent.llm_call(prompt)
 
